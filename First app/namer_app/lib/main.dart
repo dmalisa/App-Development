@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
 
-   void getNext() {
+  void getNext() {
     current = WordPair.random();
     notifyListeners();
   }
@@ -45,10 +45,28 @@ class MyAppState extends ChangeNotifier {
   }
 }
 
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
 
-class MyHomePage extends StatelessWidget {
+class _MyHomePageState extends State<MyHomePage> {
+  var selectedIndex = 0;
+
   @override
   Widget build(BuildContext context) {
+    Widget page;
+    switch (selectedIndex) {
+      case 0:
+        page = GeneratorPage();
+        break;
+      case 1:
+        page = FavoritesPage();
+        break;
+      default:
+        throw UnimplementedError('no widget for $selectedIndex');
+    }
+
     return Scaffold(
       body: Row(
         children: [
@@ -65,16 +83,18 @@ class MyHomePage extends StatelessWidget {
                   label: Text('Favorites'),
                 ),
               ],
-              selectedIndex: 0,
+              selectedIndex: selectedIndex,
               onDestinationSelected: (value) {
-                print('selected: $value');
+                setState(() {
+                  selectedIndex = value;
+                });
               },
             ),
           ),
           Expanded(
             child: Container(
               color: Theme.of(context).colorScheme.primaryContainer,
-              child: GeneratorPage(),
+              child: page,
             ),
           ),
         ],
@@ -82,7 +102,6 @@ class MyHomePage extends StatelessWidget {
     );
   }
 }
-
 
 class GeneratorPage extends StatelessWidget {
   @override
@@ -128,6 +147,36 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
+class FavoritesPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    var favoritesList = appState.favorites;
+
+    if(favoritesList.isEmpty){
+      return Center(
+        child: Text("No favorites yet."),
+      );
+    }
+
+    return ListView(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text('You have ' 
+          '${favoritesList.length} favourites:'),
+        ),
+        for (var pair in favoritesList)
+        ListTile(
+          leading: Icon(Icons.favorite),
+          title: Text(pair.asCamelCase),
+        ),
+      ],
+    );
+  }
+
+  
+}
 
 class BigCard extends StatelessWidget {
   const BigCard({
@@ -146,14 +195,13 @@ class BigCard extends StatelessWidget {
 
     return Card(
       color: theme.colorScheme.primary,
-
       child: Padding(
         padding: const EdgeInsets.all(30),
         child: Text(
-          pair.asLowerCase, 
+          pair.asLowerCase,
           style: style,
           semanticsLabel: pair.asPascalCase,
-          ),
+        ),
       ),
     );
   }
